@@ -1,35 +1,11 @@
 import React, { MouseEvent, createRef, useState, useMemo } from 'react'
-import {v4 as uuid} from 'uuid'
+
 import BoardBackground from './Background'
 import {Piece, offsetStyle} from './Piece'
+import {square, piece, pair , color,selPieceData} from "../types"
+import {deepClone} from "../modules/moveLogic"
 import '../chessStyles.css'
 
-type pieceTypes = 'k'|'q'|'r'|'b'|'n'|'p';
-
-type color = "w" | "b";
-
-type pair = {
-  x:number,
-  y:number
-};
-
-
-
-type piece = {
-  id : string;
-  ruleset : pieceTypes,
-  color : color
-  };
-
-
-type square = piece | 'empty';
-
-
-type selPieceData= {
-  id:string;
-  dispCoord: pair;
-  isDragging:boolean;
-}|"none";
 
 export default function ChessGame() { 
 
@@ -42,7 +18,7 @@ export default function ChessGame() {
     steve.push(col);
   }
 
-  steve[0][0] = {id:"bob", ruleset:"p", color:"w"};
+  steve[0][0] = {id:"bob", ruleset:"p", color:"w", x:0,y:0};
 
 
 
@@ -51,86 +27,50 @@ export default function ChessGame() {
   const [turn, set_turn] = useState<color>("w"); 
 
   // For interaction with pieces.
-  const [selPiece,set_selpiece] = useState<selPieceData>({id:"none", dispCoord:{x:0,y:0}, isDragging:false});
+  const [selPiece,set_selpiece] = useState<selPieceData>("none");
 
-  const pieceIDlist:string[] = useMemo( () => {
-      let idList:string[] = [];
+  const allPieces:piece[] = useMemo( () => {
+      let idList:piece[] = [];
       boardState.forEach(x => x.forEach(y => {
-        if(y !== "empty"){idList.push(y.id)}}));
+        if(y !== "empty"){idList.push(y)}}));
       return idList;
     }, [boardState] );
   
-
-  const locations: Map<string,pair> = useMemo(()=>{
-      let loc = new Map <string,pair>();
-      boardState.forEach((row,x) => row.forEach((square,y) => {
-        if(square!=="empty"){
-          loc.set(square.id, {x:x,y:y});
-        }
-      }));
-      console.log("location update");
-      console.log(loc);
-      return loc;
-  }, [boardState]);
-  
   const pieceStyles: Map<string,offsetStyle> = useMemo( ()=> {
       let styles  = new Map<string,offsetStyle>();
-      let loc:pair|undefined;
-      pieceIDlist.forEach(id => {
-        loc = locations.get(id);
-        if(selPiece!=="none" && id === selPiece.id){
-          styles.set(id, {top: `${selPiece.dispCoord.y}px`,left: `${selPiece.dispCoord.x}px`, transform :""});
-        } else if(loc!== undefined){
-          styles.set(id, {top: ``,left: ``, transform : `translate(${100*loc.x}%,${100*loc.y}% )`});
+      allPieces.forEach( piece => {
+        if(selPiece !=="none" && piece.id === selPiece.piece.id){
+          styles.set(piece.id, {top: `${selPiece.dispCoord.y}px`,left: `${selPiece.dispCoord.x}px`, transform :""});
+        } else {
+          styles.set(piece.id, {top: ``,left: ``, transform : `translate(${100*piece.x}%,${100*piece.y}% )`});
         }
       });
       return styles;
-      },[selPiece,pieceIDlist,locations]);
+      },[selPiece, allPieces]);
   
   const container = createRef<HTMLDivElement>();
 
-  function processMoveRequest (pieceId:string , endpoint:pair):void{
+  function processMoveRequest (piece:piece , endpoint:pair):void{
     console.log("movereq")
     console.log(boardState);
     const boardXY = clientToBoard(endpoint);
-    const curPos = locations.get(pieceId);
-    console.log("pos");
-    console.log(curPos);
-    if(onBoard(boardXY) && (boardXY.x === boardXY.y) && curPos!== undefined){
-        set_boardState((xm) => {
+    if(onBoard(boardXY) && (boardXY.x === boardXY.y) ){
+        set_boardState((prev) => {
           console.log("movereq2")
-          console.log(xm);
-          let newState = deepClone(xm);
-          
-          newState[boardXY.x][boardXY.y] = xm[curPos.x][curPos.y];
-          newState[curPos.x][curPos.y] = "empty";
-          console.log(newState);
+          console.log(prev);
+          let newState = deepClone(prev);
+          let oldPiece = newState[piece.x][piece.y] ;
+          if(oldPiece!== "empty"){
+            newState[boardXY.x][boardXY.y] = {...oldPiece, x:boardXY.x, y:boardXY.y}
+            newState[piece.x][piece.y] = "empty";
+          }
           return newState;
         });
     }
     
   }
   
-  function deepClone(board:square[][]):square[][]{
-    let clone :square[][] = [];
-    let col: square[] = [];
-    let sq : square = "empty";
-    for(let x = 0; x< 8 ; x++){
-      col = [];
-      for(let y = 0; y< 8 ; y++){
-        sq = board[x][y];
-        if(sq === "empty"){
-          col.push("empty");
-        } else {
-          col.push({id:sq.id, color :sq.color, ruleset:sq.ruleset});
-        }
-        
-      }
-      clone.push(col);
-    }
 
-    return clone;
-  }
 
   function clientToBoard(point:pair):pair{
     let [boardX, boardY] = [-1,-1];
@@ -161,7 +101,7 @@ export default function ChessGame() {
            newX = pieceDiv.getBoundingClientRect().left;
            newY = pieceDiv.getBoundingClientRect().top ;
         }
-        set_selpiece({id:square.id , dispCoord: {x:newX,y:newY} , isDragging :true });
+        set_selpiece({piece:square , dispCoord: {x:newX,y:newY} , isDragging :true });
       }
       
     }
@@ -171,7 +111,7 @@ export default function ChessGame() {
   function dragging(e:MouseEvent){
     e.preventDefault();
     if(selPiece!== "none"){
-      const pieceDiv = document.getElementById(selPiece.id);
+      const pieceDiv = document.getElementById(selPiece.piece.id);
       if(pieceDiv){
         const newX = pieceDiv.getBoundingClientRect().left - selPiece.dispCoord.x+e.clientX;
         const newY = pieceDiv.getBoundingClientRect().top - selPiece.dispCoord.y+e.clientY;
@@ -185,7 +125,7 @@ export default function ChessGame() {
   function dragEnd(e:MouseEvent){
     e.preventDefault();
     if(selPiece!== "none"){
-      processMoveRequest(selPiece.id, {x:e.clientX, y:e.clientY});
+      processMoveRequest(selPiece.piece, {x:e.clientX, y:e.clientY});
     }
     
     set_selpiece("none");
