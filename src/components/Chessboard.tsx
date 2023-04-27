@@ -204,6 +204,7 @@ export default function ChessGame() {
         {allPieces.map(piece => { return (
           <Piece key = {uuid()}
             id = {piece.id}
+            srcPath = {`./images/${piece.color}${piece.ruleset}.svg`}
             pieceStyle = {pieceStyles.get(piece.id) as offsetStyle}
           />)
         })}
@@ -225,6 +226,7 @@ export default function ChessGame() {
           <Piece
             key = {uuid()}
             id = {piece.id}
+            srcPath = {`./images/${piece.color}${piece.ruleset}.svg`}
             pieceStyle = {pieceStyles.get(piece.id) as offsetStyle}
           />)
         })}

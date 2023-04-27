@@ -12,15 +12,16 @@ export interface offsetStyle{
 
 interface piecePosProp {
     id:string;
+    srcPath:string;
     pieceStyle:offsetStyle;
 }
 
-export function Piece({id, pieceStyle}:piecePosProp) {
+export function Piece({id,srcPath, pieceStyle}:piecePosProp) {
 
   return (
     <img
         id = {id}
-        src = './images/pawn.svg' 
+        src = {srcPath} 
         alt ='' 
         className='piece' 
         style = {pieceStyle}

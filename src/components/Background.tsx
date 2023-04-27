@@ -3,7 +3,7 @@ import '../chessStyles.css'
 
 export default function BoardBackground() {
   return (
-    <img src = {'../images/bg.svg'} alt ="" className ="boardBackground" />
+    <img src = {'../images/checkers.svg'} alt ="" className ="boardBackground" />
     
   )
 }
