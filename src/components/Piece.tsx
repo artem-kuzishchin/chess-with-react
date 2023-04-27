@@ -11,12 +11,11 @@ export interface offsetStyle{
 }
 
 interface piecePosProp {
-    id:string
-    pieceStyle:offsetStyle
+    id:string;
+    pieceStyle:offsetStyle;
 }
 
-export function Piece({id,pieceStyle}:piecePosProp) {
-
+export function Piece({id, pieceStyle}:piecePosProp) {
 
   return (
     <img

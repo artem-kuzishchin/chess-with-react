@@ -7,6 +7,7 @@ export type pair = {
   y:number
 };
 
+export type epData = pair | "-";
 
 
 export type piece = pair & {
@@ -16,7 +17,7 @@ export type piece = pair & {
   };
 
 
-export type square = piece | 'empty';
+export type square = piece | "empty";
 
 
 export type selPieceData= {
@@ -28,13 +29,18 @@ export type selPieceData= {
 
 
 export type chessGamestate = {
-  board:square[][],
-  turn:color,
-  epTarget:pair|"-",
-  castles: castleData,
-  halfMovesSinceProgress:number,
-  fullMoves:number
+  board:square[][];
+  turn:color;
+  epTarget: epData;
+  castles: castleData;
+  halfMovesSinceProgress:number;
+  fullMoves:number;
 }
 
 export type castleData = [[boolean,boolean],[boolean,boolean]];
+
+
+export type gameStateReply = "Checkmate" | "Stalemate" | "Insufficient Material" | "50 Halfmove Draw" | "Ongoing";
+
+export type castleReply = "NO" | "KINGSIDE" | "QUEENSIDE";
 

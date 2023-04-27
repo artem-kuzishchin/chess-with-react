@@ -1,0 +1,1 @@
+Currently board coordinates and display coordinates are out of wack, and must be fixed.

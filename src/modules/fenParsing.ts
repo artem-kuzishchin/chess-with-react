@@ -208,7 +208,7 @@ export function defaultFen(): string[][] {
         );
     }
 
-    board.push(["W", "KQkq", "-", "0", "1"]);
+    board.push(["w", "KQkq", "-", "0", "1"]);
 
     return board;
 }
@@ -228,7 +228,9 @@ export function fenToPosition(fen: string): chessGamestate {
 
     let board: square[][] = [];
     sanitizedFEN.forEach((col, index) => {
-        board.push(fenColToSquareCol(col, index));
+        if(index<8){
+            board.push(fenColToSquareCol(col, index));
+        }
     });
     const turn = sanitizedFEN[8][0] as color;
     const castles = fenToCastle(sanitizedFEN[8][1]);
@@ -249,6 +251,10 @@ export function fenToPosition(fen: string): chessGamestate {
     }
 }
 
+
+export function startingPosition():chessGamestate{
+    return fenToPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+}
 
 
 function fenToCastle(fen: string): [[boolean, boolean], [boolean, boolean]] {
