@@ -1,6 +1,6 @@
 
 
-import { chessGamestate, color, pieceTypes, square, pair } from "../types";
+import { chessPosition, color, pieceTypes, square, pair } from "../types";
 import { v4 as uuid } from 'uuid'
 
 // Takes in a string, expected to be in Forsyth–Edwards Notation
@@ -218,7 +218,7 @@ export function defaultFen(): string[][] {
 /*      Methods turning sanitized FEN input into expected data structure.     */
 /* -------------------------------------------------------------------------- */
 
-export function fenToPosition(fen: string): chessGamestate {
+export function fenToPosition(fen: string): chessPosition{
     let sanitizedFEN: string[][] = []
     try {
         sanitizedFEN = parseFen(fen);
@@ -252,7 +252,7 @@ export function fenToPosition(fen: string): chessGamestate {
 }
 
 
-export function startingPosition():chessGamestate{
+export function startingPosition():chessPosition{
     return fenToPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 

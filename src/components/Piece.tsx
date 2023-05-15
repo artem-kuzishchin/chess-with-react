@@ -18,13 +18,22 @@ interface piecePosProp {
 
 export function Piece({id,srcPath, pieceStyle}:piecePosProp) {
 
-  return (
-    <img
+  if(pieceStyle.transform === ""){
+    return <img
         id = {id}
         src = {srcPath} 
         alt ='' 
-        className='piece' 
+        className='sq draggingPiece' 
         style = {pieceStyle}
     />
-  )
+  }
+  
+  return <img
+    id={id}
+    src={srcPath}
+    alt=''
+    className='sq piece'
+    style={pieceStyle}
+  />
+
 }

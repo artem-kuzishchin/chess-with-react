@@ -1,4 +1,4 @@
-import { chessGamestate, pieceTypes, piece, pair, square, color, epData, castleReply, gameStateReply } from "../types";
+import { chessPosition, piece, pair, square, color, epData, castleReply, gameStateReply } from "../types";
 
 
 
@@ -6,7 +6,7 @@ import { chessGamestate, pieceTypes, piece, pair, square, color, epData, castleR
 
 
 // Given a gamestate and a list of pieces, finds where each piece can move.
-export function calcLegalMoves(position: chessGamestate, pieces: piece[]): Map<piece, boolean[][]> {
+export function calcLegalMoves(position: chessPosition, pieces: piece[]): Map<piece, boolean[][]> {
     let moves = new Map<piece, boolean[][]>();
     for (let piece of pieces) {
         moves.set(piece, getLegalMovesOf(position, piece));
@@ -17,9 +17,9 @@ export function calcLegalMoves(position: chessGamestate, pieces: piece[]): Map<p
 
 /* Returns an array where [i][k] = true  <==>                
 @piece can move to square (i,k) in the position @position  */
-function getLegalMovesOf(position: chessGamestate, piece: piece): boolean[][] {
+function getLegalMovesOf(position: chessPosition, piece: piece): boolean[][] {
     // We will be changing playing hypothetical moves in the following steps, and want the starting position to be unchanged.
-    let currentPosition: chessGamestate = { ...position, board: deepClone(position.board) };
+    let currentPosition: chessPosition = { ...position, board: deepClone(position.board) };
 
     let candidateMoves: boolean[][] = getMovespaceOf(currentPosition, piece);
 
@@ -35,7 +35,7 @@ function getLegalMovesOf(position: chessGamestate, piece: piece): boolean[][] {
 }
 
 
-function getMovespaceOf(position: chessGamestate, piece: piece): boolean[][] {
+function getMovespaceOf(position: chessPosition, piece: piece): boolean[][] {
 
     switch (piece.ruleset) {
         case ("q"): return queenThreats(position, piece);
@@ -47,7 +47,7 @@ function getMovespaceOf(position: chessGamestate, piece: piece): boolean[][] {
     }
 }
 
-function inducedCheckFilter(position: chessGamestate, piece: piece, candidateMoves: boolean[][]): boolean[][] {
+function inducedCheckFilter(position: chessPosition, piece: piece, candidateMoves: boolean[][]): boolean[][] {
     for (var x = 0; x < 8; x++) {
         for (var y = 0; y < 8; y++) {
             if (candidateMoves[x][y]) {
@@ -59,7 +59,7 @@ function inducedCheckFilter(position: chessGamestate, piece: piece, candidateMov
 }
 
 
-function castleFilter(position: chessGamestate, piece: piece, threats: boolean[][]): boolean[][] {
+function castleFilter(position: chessPosition, piece: piece, threats: boolean[][]): boolean[][] {
     if (piece.ruleset !== "k") {
         return threats;
     }
@@ -89,23 +89,23 @@ function castleFilter(position: chessGamestate, piece: piece, threats: boolean[]
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-function queenThreats(position: chessGamestate, piece: piece): boolean[][] {
+function queenThreats(position: chessPosition, piece: piece): boolean[][] {
     return combineBoolArrays(bishopThreats(position, piece), rookThreats(position, piece));
 }
 
-function bishopThreats(position: chessGamestate, piece: piece): boolean[][] {
+function bishopThreats(position: chessPosition, piece: piece): boolean[][] {
     let attackDirections: pair[] = [{ x: 1, y: -1 }, { x: -1, y: 1 }, { x: 1, y: 1 }, { x: -1, y: -1 }];
     return directionalThreatSearch(position, piece, attackDirections);
 }
 
-function rookThreats(position: chessGamestate, piece: piece): boolean[][] {
+function rookThreats(position: chessPosition, piece: piece): boolean[][] {
     let attackDirections: pair[] = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: -1 }, { x: 0, y: 1 }];
     return directionalThreatSearch(position, piece, attackDirections);
 }
 
 // Given a @piece, a @position, and @threatDirections a list of vectors [x,y]
 // Returns an array where [i][j] = true <===> the piece can potentially move to or capture on square [i][j] 
-function directionalThreatSearch(position: chessGamestate, piece: piece,threatDirections: pair[]): boolean[][] {
+function directionalThreatSearch(position: chessPosition, piece: piece,threatDirections: pair[]): boolean[][] {
     let threats = emptyBoolArray();
     let atSquare = {x:piece.x, y:piece.y};
     let threatenedSquare: pair = { ...atSquare };
@@ -142,7 +142,7 @@ function directionalThreatSearch(position: chessGamestate, piece: piece,threatDi
     return threats;
 }
 
-function pawnThreats(position: chessGamestate, piece: piece): boolean[][] {
+function pawnThreats(position: chessPosition, piece: piece): boolean[][] {
 
     let threats = emptyBoolArray();
     let atSquare = getLocation(piece);
@@ -163,7 +163,7 @@ function pawnThreats(position: chessGamestate, piece: piece): boolean[][] {
 
 }
 
-function pawnMoves(position: chessGamestate, pawn: piece): boolean[][] {
+function pawnMoves(position: chessPosition, pawn: piece): boolean[][] {
     let moves = emptyBoolArray();
     let facingDirection = (pawn.color === "w" ? 1 : -1);
     let curSq = { x: pawn.x, y: pawn.y + facingDirection };
@@ -184,7 +184,7 @@ function pawnMoves(position: chessGamestate, pawn: piece): boolean[][] {
 
 }
 
-function knightThreats(position: chessGamestate, piece: piece): boolean[][] {
+function knightThreats(position: chessPosition, piece: piece): boolean[][] {
     let atSquare = getLocation(piece);
     let threats = emptyBoolArray();
     let curThreats: pair[];
@@ -203,7 +203,7 @@ function knightThreats(position: chessGamestate, piece: piece): boolean[][] {
     return threats;
 }
 
-function kingThreats(position: chessGamestate, piece: piece): boolean[][] {
+function kingThreats(position: chessPosition, piece: piece): boolean[][] {
 
     let threats = emptyBoolArray();
     let curSquare = { x: 0, y: 0 };
@@ -232,7 +232,7 @@ function kingThreats(position: chessGamestate, piece: piece): boolean[][] {
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
-function curPlayerInCheck(position:chessGamestate): boolean {
+function curPlayerInCheck(position:chessPosition): boolean {
     let king = getKingOf(position,position.turn);
     if(king === "empty"){
         console.log("curPlayerInCheck: cannot find king.")
@@ -244,7 +244,7 @@ function curPlayerInCheck(position:chessGamestate): boolean {
 
 }
 
-function moveAvoidsCheck(position: chessGamestate, piece: piece,  target: pair): boolean {
+function moveAvoidsCheck(position: chessPosition, piece: piece,  target: pair): boolean {
 
     let king = getKingOf(position, position.turn);
     if (king === "empty") {
@@ -279,7 +279,7 @@ function moveAvoidsCheck(position: chessGamestate, piece: piece,  target: pair):
 
 }
 
-function getKingOf(position:chessGamestate, player: color): square{
+function getKingOf(position:chessPosition, player: color): square{
     let sq: square = "empty";
     for (let x = 0; x < 8; x++) {
         for (let y = 0; y < 8; y++) {
@@ -294,7 +294,7 @@ function getKingOf(position:chessGamestate, player: color): square{
 }
 
 
-export function getAllPiecesOf(position: chessGamestate, player: color): piece[] {
+export function getAllPiecesOf(position: chessPosition, player: color): piece[] {
     let playerPieces : piece[] = [];
     let sq: square = "empty";
     for (let x = 0; x < 8; x++) {
@@ -318,15 +318,15 @@ export function getAllPiecesOf(position: chessGamestate, player: color): piece[]
 
 
 
-function kingsideCastleCheck(position: chessGamestate, king: piece): boolean {
+function kingsideCastleCheck(position: chessPosition, king: piece): boolean {
     return intermediateSquaresCheck(position, king, [{ x: 5, y: king.y }, { x: 6, y: king.y }]);
 }
 
-function queensideCastleCheck(position: chessGamestate, king: piece): boolean {
+function queensideCastleCheck(position: chessPosition, king: piece): boolean {
     return intermediateSquaresCheck(position, king, [{ x: 1, y: king.y }, { x: 2, y: king.y }, { x: 3, y: king.y }]);
 }
 
-function intermediateSquaresCheck(position: chessGamestate, king: piece, intermediateSquares: pair[]): boolean {
+function intermediateSquaresCheck(position: chessPosition, king: piece, intermediateSquares: pair[]): boolean {
     let kingCanTraverse: boolean[] = [];
     for (let square of intermediateSquares) {
         kingCanTraverse.push(squareIsEmpty(position, square) && moveAvoidsCheck(clonePosition(position), king, square));
@@ -334,20 +334,20 @@ function intermediateSquaresCheck(position: chessGamestate, king: piece, interme
     return kingCanTraverse.reduce((canTraverseAllSoFar, canTraverseCurrent) => canTraverseAllSoFar && canTraverseCurrent);
 }
 
-export function moveIsCastles(position: chessGamestate, piece:piece, target: pair): castleReply {
+export function moveIsCastles(position: chessPosition, piece:piece, target: pair): castleReply {
     let player = (position.turn === "w")? 0 : 1;
     let yCo = (position.turn === "w") ? 0 : 7;
     if(yCo!== target.y || piece.ruleset!== "k"){
-        return "NO";
+        return "no";
     }
     if (target.x === 6 && position.castles[player][0]) {
-        return "KINGSIDE";
+        return "kingside";
     }
 
     if (target.x === 2 && position.castles[player][1]) {
-        return "QUEENSIDE";
+        return "queenside";
     }
-    return "NO";
+    return "no";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -359,26 +359,49 @@ export function moveIsCastles(position: chessGamestate, piece:piece, target: pai
 /* -------------------------------------------------------------------------- */
 
 
-function gameIsOver(position: chessGamestate, currentPlayersLegalMoves: Map<piece, boolean[][]>): gameStateReply {
-    let gameState: gameStateReply = "Ongoing";
-    if (!currentPlayerHasLegalMoves(currentPlayersLegalMoves)) {
-        if (curPlayerInCheck(position)) {
-            gameState = "Checkmate";
+export function getStateOfGame(position:chessPosition, currentPlayersLegalMoves:Map<piece,boolean[][]>): gameStateReply{
+    let gameState:gameStateReply= "ongoing";
+    if(!currentPlayerHasLegalMoves(currentPlayersLegalMoves)){
+        if(curPlayerInCheck(position)){
+            gameState = "checkmate";
         }
         else {
-            gameState = "Stalemate";
+            gameState = "stalemate";
         }
     }
 
-    if (insufficientMaterialToMate(position)) {
-        gameState = "Insufficient Material"
+    if(insufficientMaterialToMate(position)){
+        gameState = "insufficient material";
     }
 
-    if (position.halfMovesSinceProgress === 50) {
-        gameState = "50 Halfmove Draw"
+    if(position.halfMovesSinceProgress === 50){
+        gameState = "halfmove draw";
     }
 
     return gameState;
+}
+
+// Draws by insufficient material happen when no pawns are on the board and BOTH sides have one of:
+//  a lone king /  king + bishop  / king + knight
+ function insufficientMaterialToMate(position : chessPosition):boolean{
+    let whitePieces = getAllPiecesButKingOf(position,"w");
+    let blackPieces = getAllPiecesButKingOf(position, "b");
+
+    if(whitePieces.length >=2 || blackPieces.length >= 2){
+        return false;
+    }
+
+    // After guard clause both arrays have at most one element.
+
+    return ( drawMaterial(whitePieces) &&  drawMaterial(blackPieces));
+}
+
+// Accepts an array of length 0 or 1.
+function drawMaterial(lastPieces : piece[]) : boolean{
+    if(lastPieces.length === 0){
+        return true;
+    }
+    return (lastPieces[0].ruleset === "n" || lastPieces[0].ruleset === "b");
 }
 
 
@@ -395,28 +418,6 @@ function currentPlayerHasLegalMoves(currentPlayersLegalMoves: Map<piece, boolean
     return cumulativeSearch;
 }
 
-// Draws by insufficient material happen when no pawns are on the board and BOTH sides have one of:
-//  a lone king /  king + bishop  / king + knight
-function insufficientMaterialToMate(position:chessGamestate): boolean {
-    let whitePieces = getAllPiecesButKingOf(position, "w");
-    let blackPieces = getAllPiecesButKingOf(position, "b");
-
-    if (whitePieces.length >= 2 || blackPieces.length >= 2) {
-        return false;
-    }
-
-    // After guard clause both arrays have at most one element.
-
-    return (drawMaterial(whitePieces) && drawMaterial(blackPieces));
-}
-
-// Accepts an array of length 0 or 1.
-function drawMaterial(lastPieces: piece[]): boolean {
-    if (lastPieces.length === 0) {
-        return true;
-    }
-    return (lastPieces[0].ruleset === "n" || lastPieces[0].ruleset === "b");
-}
 
 
 
@@ -451,11 +452,11 @@ export function deepClone(board: square[][]): square[][] {
 }
 
 
-function clonePosition(position:chessGamestate):chessGamestate{
+function clonePosition(position:chessPosition):chessPosition{
     return {...position, board: deepClone(position.board)};
 }
 
-function canMoveToOrCaptureOn(position: chessGamestate, piece: piece, square: pair): boolean {
+function canMoveToOrCaptureOn(position: chessPosition, piece: piece, square: pair): boolean {
     let content = position.board[square.x][square.y];
     if (content !== "empty") {
         return (piece.color !== content.color);
@@ -470,7 +471,7 @@ function emptyBoolArray(): boolean[][] {
 }
 
 
-function squareIsEmpty(position: chessGamestate, coordinate: pair): boolean {
+function squareIsEmpty(position: chessPosition, coordinate: pair): boolean {
     return position.board[coordinate.x][coordinate.y] === "empty";
 }
 
@@ -483,7 +484,7 @@ function pawnHasNotMoved(piece: piece): boolean {
 
 
 // Returns true if the given position allows a capture "en passant" on the given square.
-function EPCheck(square: pair, position: chessGamestate): boolean {
+function EPCheck(square: pair, position: chessPosition): boolean {
     let epTarg = position.epTarget;
     if (epTarg === "-") {
         return false;
@@ -493,7 +494,7 @@ function EPCheck(square: pair, position: chessGamestate): boolean {
 
 }
 
-function positionHasEnemyAt(piece: piece, threat: pair, position: chessGamestate): boolean {
+function positionHasEnemyAt(piece: piece, threat: pair, position: chessPosition): boolean {
     let square = position.board[threat.x][threat.y];
     let pieceSeesEnemyThere = (square === "empty") ? false : square.color !== piece.color;
     return pieceSeesEnemyThere;
@@ -518,7 +519,7 @@ function inBounds(sq: pair): boolean {
 }
 
 
-function currentOpponent(position: chessGamestate): color {
+function currentOpponent(position: chessPosition): color {
     return (position.turn === "w" ? "b" : "w");
 }
 
@@ -541,7 +542,7 @@ function getLocation(piece:piece):pair{
     return {x:piece.x, y:piece.y};
 }
 
-function getAllPiecesButKingOf(position:chessGamestate, player:color):piece[]{
+function getAllPiecesButKingOf(position:chessPosition, player:color):piece[]{
     let pieces = getAllPiecesOf(position,player);
     return pieces.filter(x => x.ruleset!=="k");
 

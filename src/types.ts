@@ -1,14 +1,11 @@
-export type pieceTypes = 'k'|'q'|'r'|'b'|'n'|'p';
-
-export type color = "w" | "b";
-
 export type pair = {
   x:number,
   y:number
 };
 
-export type epData = pair | "-";
+export type pieceTypes = 'k'|'q'|'r'|'b'|'n'|'p';
 
+export type color = "w" | "b";
 
 export type piece = pair & {
   id : string;
@@ -19,16 +16,11 @@ export type piece = pair & {
 
 export type square = piece | "empty";
 
+export type castleData = [[boolean,boolean],[boolean,boolean]];
 
-export type selPieceData= {
-  piece:piece;
-  dispCoord: pair;
-  isDragging:boolean;
-}|"none";
+export type epData = pair | "-";
 
-
-
-export type chessGamestate = {
+export type chessPosition = {
   board:square[][];
   turn:color;
   epTarget: epData;
@@ -37,10 +29,20 @@ export type chessGamestate = {
   fullMoves:number;
 }
 
-export type castleData = [[boolean,boolean],[boolean,boolean]];
+export type gameStateReply = "checkmate" | "stalemate" | "insufficient material" | "halfmove draw" |"threefold repetition" | "ongoing";
+
+export type castleReply = "no" | "kingside" | "queenside";
+
+export type squareDecorations = "dest" | "capture" | "epCapture" | "origin"  | "prevMove"; 
+
+export type selPieceData= {
+  piece:piece;
+  dispCoord: pair;
+  isDragging : boolean;
+  hasLeftOriginSquare:boolean;
+}|"none";
 
 
-export type gameStateReply = "Checkmate" | "Stalemate" | "Insufficient Material" | "50 Halfmove Draw" | "Ongoing";
 
-export type castleReply = "NO" | "KINGSIDE" | "QUEENSIDE";
+
 
